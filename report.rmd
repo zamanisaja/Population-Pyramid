@@ -27,9 +27,10 @@ library(wbstats)
 library(tidyverse)
 library(ggplot2)
 library(gganimate)
+library(shiny)
 ```
 
-```{r load_data}
+```{r loadData}
 if (file.exists("data.csv")) {
     df <- read_csv2("data.csv", show_col_types = FALSE)
 } else {
@@ -50,8 +51,8 @@ if (file.exists("data.csv")) {
 # To save the regions in the dataframe
 df <- left_join(
     df,
-    wb_countries()[, c("iso2c", "region")],
-    by = c("iso2c")
+    wb_countries()[, c("iso3c", "region")],
+    by = c("iso3c")
 )
 
 # Remove unneccesary columns
@@ -79,6 +80,17 @@ df <- df %>%
     mutate(age = if_else(age == "80UP", "80+", age)) %>%
     mutate(age = paste(substr(age, 1, 2), "-", substr(age, 3, 4), sep = "")) %>%
     mutate(age = as.factor(age))
+```
+```{r}
+regions <- unique(df$region)
+countries <- df %>%
+    select(region, country) %>%
+    group_by(region) %>%
+    distinct()
+
+countries <- countries %>%
+    group_split(.keep = FALSE) %>%
+    setNames((group_keys(countries))$region)
 ```
 
 ```{r}
@@ -109,4 +121,111 @@ g <- df %>%
 anim_save(paste("animations/", which_country, ".gif", sep = ""))
 
 g
+```
+
+
+```{r shinyUI}
+# Define UI for random distribution app ----
+ui <- fluidPage(
+
+    # App title ----
+    titlePanel("Tabsets"),
+
+    # Sidebar layout with input and output definitions ----
+    sidebarLayout(
+
+        # Sidebar panel for inputs ----
+        sidebarPanel(
+            # Input: Select the region from this list
+            selectInput(
+                inputId = "region",
+                label = "Region:",
+                choices = regions,
+                selected = "Middle East & North Africa",
+            ),
+            br(),
+
+            # Input: Select a country from this region
+            selectInput(
+                inputId = "country",
+                label = "Country:",
+                choices = regions,
+                selected = "Middle East & North Africa",
+            ),
+            br(),
+
+            # Input: Slider for the year
+            sliderInput(
+                inputId = "year",
+                label = "year",
+                value = 2010,
+                min = 2001,
+                max = 2020,
+                step = 1,
+            )
+        ),
+
+        # Main panel for displaying outputs ----
+        mainPanel(
+
+            # Output: Tabset w/ plot, summary, and table ----
+            tabsetPanel(
+                type = "tabs",
+                tabPanel("Plot", plotOutput("plot")),
+                # tabPanel("Summary", verbatimTextOutput("summary")),
+                # tabPanel("Table", tableOutput("table"))
+            )
+        )
+    )
+)
+```
+```{r shinyServer}
+# Define server logic for random distribution app ----
+server <- function(input, output) {
+
+    # Reactive expression to generate the requested distribution ----
+    # This is called whenever the inputs change. The output functions
+    # defined below then use the value computed from this expression
+    inputs <- reactive({
+        dist <- switch(input$dist,
+            norm = rnorm,
+            unif = runif,
+            lnorm = rlnorm,
+            exp = rexp,
+            rnorm
+        )
+        print(input$dist)
+        print(input$region)
+        c()
+    })
+
+    # Generate a plot of the data ----
+    # Also uses the inputs to build the plot label. Note that the
+    # dependencies on the inputs and the data reactive expression are
+    # both tracked, and all expressions are called in the sequence
+    # implied by the dependency graph.
+    output$plot <- renderPlot({
+        dist <- input$dist
+        n <- input$n
+
+        hist(d(),
+            main = paste("r", dist, "(", n, ")", sep = ""),
+            col = "#75AADB", border = "white"
+        )
+    })
+
+    # Generate a summary of the data ----
+    # output$summary <- renderPrint({
+    # summary(d())
+    # })
+
+    # Generate an HTML table view of the data ----
+    # output$table <- renderTable({
+    # d()
+    # })
+}
+```
+
+```{r shinyApp}
+shinyApp(ui, server)
 ```
