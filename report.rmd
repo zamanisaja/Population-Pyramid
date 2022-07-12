@@ -94,33 +94,30 @@ countries <- countries %>%
 ```
 
 ```{r}
-which_country <- "Iran, Islamic Rep."
-which_year <- c(2010:2012)
-
-g <- df %>%
-    filter(country == which_country) %>%
-    filter(year %in% which_year) %>%
-    mutate(population = population / 1000) %>%
-    mutate(population = ifelse(gender == "Male", population * (-1), population * 1)) %>%
-    ggplot() +
-    aes(x = age, y = population, fill = gender) +
-    geom_bar(stat = "identity") +
-    coord_flip() +
-    labs(
-        title = paste("Population of", country, "(", year, ")"),
-        x = "Age",
-        y = "Population(in thousands)"
-    ) +
-    transition_states(
-        year,
-        transition_length = 2,
-        state_length = 1
-    ) +
-    ease_aes("sine-in-out")
-
-anim_save(paste("animations/", which_country, ".gif", sep = ""))
-
-g
+get_plot <- function(df, which_country = "Iran, Islamic Rep.", which_year = 2010) {
+    g <- df %>%
+        filter(country == which_country) %>%
+        filter(year %in% which_year) %>%
+        mutate(population = population / 1000) %>%
+        mutate(population = ifelse(gender == "Male", population * (-1), population * 1)) %>%
+        ggplot() +
+        aes(x = age, y = population, fill = gender) +
+        geom_bar(stat = "identity") +
+        coord_flip() +
+        labs(
+            title = paste("Population of", which_country, "(", which_year, ")"),
+            x = "Age",
+            y = "Population(in thousands)"
+        ) # +
+    # transition_states(
+    # year,
+    # transition_length = 2,
+    # state_length = 1
+    # ) +
+    # ease_aes("sine-in-out")
+    # anim_save(paste("animations/", which_country, ".gif", sep = ""))
+    g
+}
 ```
 
 
@@ -141,7 +138,7 @@ ui <- fluidPage(
                 inputId = "region",
                 label = "Region:",
                 choices = regions,
-                selected = "Middle East & North Africa",
+                selected = "Middle East & North Africa"
             ),
             br(),
 
@@ -149,8 +146,8 @@ ui <- fluidPage(
             selectInput(
                 inputId = "country",
                 label = "Country:",
-                choices = regions,
-                selected = "Middle East & North Africa",
+                choices = countries[["Middle East & North Africa"]],
+                selected = "Iran, Islamic Rep.",
             ),
             br(),
 
@@ -181,22 +178,21 @@ ui <- fluidPage(
 ```
 ```{r shinyServer}
 # Define server logic for random distribution app ----
-server <- function(input, output) {
+server <- function(input, output, session) {
+    observe({
+        x <- input$region
+        y <- c(countries[[x]]$country)
+        print(paste("Changing the region to: ", x))
 
-    # Reactive expression to generate the requested distribution ----
-    # This is called whenever the inputs change. The output functions
-    # defined below then use the value computed from this expression
-    inputs <- reactive({
-        dist <- switch(input$dist,
-            norm = rnorm,
-            unif = runif,
-            lnorm = rlnorm,
-            exp = rexp,
-            rnorm
+        # Can also set the label and select items
+        updateSelectInput(
+            session,
+            inputId = "country",
+            choices = y,
+            selected = input$country
         )
-        print(input$dist)
-        print(input$region)
-        c()
+        print(paste("getting the plot for", input$country, "(", input$year, ")"))
+        output$plot <- renderPlot(get_plot(df, input$country, input$year))
     })
 
     # Generate a plot of the data ----
@@ -204,15 +200,15 @@ server <- function(input, output) {
     # dependencies on the inputs and the data reactive expression are
     # both tracked, and all expressions are called in the sequence
     # implied by the dependency graph.
-    output$plot <- renderPlot({
-        dist <- input$dist
-        n <- input$n
+    # output$plot <- renderPlot({
+    # dist <- input$dist
+    # n <- input$n
 
-        hist(d(),
-            main = paste("r", dist, "(", n, ")", sep = ""),
-            col = "#75AADB", border = "white"
-        )
-    })
+    # hist(d(),
+    # main = paste("r", dist, "(", n, ")", sep = ""),
+    # col = "#75AADB", border = "white"
+    # )
+    # })
 
     # Generate a summary of the data ----
     # output$summary <- renderPrint({
