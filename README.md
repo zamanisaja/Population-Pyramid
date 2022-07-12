@@ -56,6 +56,7 @@ df <- left_join(
 )
 
 df <- df %>%
+    ##
     mutate(region = if_else(country == "Namibia", "Sub-Saharan Africa", region))
 
 df <- df %>%
@@ -71,24 +72,9 @@ df <- df %>%
         cols = indicators,
         names_to = c("age", "gender"),
         names_pattern = "SP.POP.(.*).(..)",
-        values_to = "count"
-    )
-```
-
-
-```r
-get_df <- function(new_df, new_country = "Italy", new_year = 2020) {
-    new_df %>%
-        filter(country == new_country) %>%
-        filter(year == new_year) %>%
-        select(-c("country", "year", "region")) %>%
-        pivot_longer(
-            cols = starts_with("SP.POP"),
-            names_to = c("age", "gender"),
-            names_pattern = "SP.POP.(.*).(..)",
-            values_to = "count"
-        )
-}
-
-# get_df(df)
+        values_to = "population"
+    ) %>%
+    mutate(gender = if_else(gender == "FE", "Female", "Male")) %>%
+    mutate(gender = as.factor(gender)) %>%
+    mutate(age = as.factor(age))
 ```
