@@ -26,6 +26,7 @@ I'm getting the data from [The World Bank](https://www.worldbank.org/en/home) us
 library(wbstats)
 library(tidyverse)
 library(ggplot2)
+library(gganimate)
 wb_search("population ages.*male")[1:5, ]
 ```
 
@@ -76,10 +77,11 @@ df <- df %>%
 
 ```{r}
 which_country <- "Iran, Islamic Rep."
-which_year <- 2010
+which_year <- c(2010:2012)
 
 g <- df %>%
-    filter(country == which_country, year == which_year) %>%
+    filter(country == which_country) %>%
+    filter(year %in% which_year) %>%
     mutate(population = population / 1000) %>%
     mutate(population = ifelse(gender == "Male", population * (-1), population * 1)) %>%
     ggplot() +
@@ -90,7 +92,15 @@ g <- df %>%
         title = paste("Population of", country, "(", year, ")"),
         x = "Age",
         y = "Population(in thousands)"
-    )
+    ) +
+    transition_states(
+        year,
+        transition_length = 2,
+        state_length = 1
+    ) +
+    ease_aes("sine-in-out")
+
+anim_save(paste("animations/", which_country, ".gif", sep = ""))
 
 g
 ```
