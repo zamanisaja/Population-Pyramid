@@ -27,33 +27,34 @@ library(wbstats)
 library(tidyverse)
 library(ggplot2)
 library(gganimate)
-wb_search("population ages.*male")[1:5, ]
 ```
 
 ```{r load_data}
-# array of ["SP.POP.0004.FE" .. "SP.POP.2024.MA" .. ]
-indicators <- paste(rep(
-    c(
-        "SP.POP.0004", "SP.POP.0509",
-        paste("SP.POP.", 5 * c(2:15), 5 * c(2:15) + 4, sep = ""),
-        "SP.POP.80UP"
-    ), 2
-), c(".FE", ".MA"), sep = "")
+if (file.exists("data.csv")) {
+    df <- read_csv2("data.csv", show_col_types = FALSE)
+} else {
+    wb_search("population ages.*male")[1:5, ]
+    # array of ["SP.POP.0004.FE" .. "SP.POP.2024.MA" .. ]
+    indicators <- paste(rep(
+        c(
+            "SP.POP.0004", "SP.POP.0509",
+            paste("SP.POP.", 5 * c(2:15), 5 * c(2:15) + 4, sep = ""),
+            "SP.POP.80UP"
+        ), 2
+    ), c(".FE", ".MA"), sep = "")
 
-# to get the orginal data I used this command
-# df <- wb_data(indicator = indicators, start_date = 2001, end_date = 2020)
-df <- read_csv2("data.csv", show_col_types = FALSE)
+    # to get the orginal data I used this command
+    df <- wb_data(indicator = indicators, start_date = 2001, end_date = 2020)
+}
 
+# To save the regions in the dataframe
 df <- left_join(
     df,
     wb_countries()[, c("iso2c", "region")],
     by = c("iso2c")
 )
 
-df <- df %>%
-    ##
-    mutate(region = if_else(country == "Namibia", "Sub-Saharan Africa", region))
-
+# Remove unneccesary columns
 df <- df %>%
     relocate(region, .after = "country") %>%
     select(-c("iso2c", "iso3c")) %>%
@@ -62,14 +63,19 @@ df <- df %>%
 
 ```{r}
 df <- df %>%
+    # look ath this example:
+    # https://tidyr.tidyverse.org/reference/pivot_longer.html#ref-examples
+    # making the table longer
     pivot_longer(
-        cols = indicators,
+        cols = !c("country", "region", "year"),
         names_to = c("age", "gender"),
         names_pattern = "SP.POP.(.*).(..)",
         values_to = "population"
     ) %>%
+    # making the gender as a factor
     mutate(gender = if_else(gender == "FE", "Female", "Male")) %>%
     mutate(gender = as.factor(gender)) %>%
+    # making the age as a factor
     mutate(age = if_else(age == "80UP", "80+", age)) %>%
     mutate(age = paste(substr(age, 1, 2), "-", substr(age, 3, 4), sep = "")) %>%
     mutate(age = as.factor(age))
