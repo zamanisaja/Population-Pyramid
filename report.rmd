@@ -120,7 +120,35 @@ get_plot <- function(df, which_country = "Iran, Islamic Rep.", which_year = 2010
             ),
             x = "Age",
             y = "Population(in thousands)"
-        ) # +
+        ) +
+        scale_y_continuous(labels = abs) +
+        theme(
+            legend.text = element_text(
+                size = 15,
+                face = "bold"
+            ),
+            plot.title = element_text(
+                size = 22,
+                hjust = 0.5,
+                face = "bold"
+            ),
+            plot.subtitle = element_text(
+                size = 14,
+                hjust = 0.5,
+                face = "bold"
+            ),
+            axis.title.x = element_text(
+                size = 16,
+                face = "bold"
+            ),
+            plot.caption = element_text(
+                size = 12,
+                hjust = 0.5,
+                face = "italic",
+                color = "gray"
+            )
+        )
+    # g +
     # transition_states(
     # year,
     # transition_length = 2,
