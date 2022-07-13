@@ -4,6 +4,7 @@ library(ggplot2)
 library(gganimate)
 library(shiny)
 
+# data --------------------------------------------
 if (file.exists("data.csv")) {
     df <- read_csv2("data.csv", show_col_types = FALSE)
 } else {
@@ -34,6 +35,7 @@ df <- df %>%
     select(-c("iso2c", "iso3c")) %>%
     rename(year = date)
 
+# pivot date
 df <- df %>%
     # look ath this example:
     # https://tidyr.tidyverse.org/reference/pivot_longer.html#ref-examples
@@ -51,6 +53,9 @@ df <- df %>%
     mutate(age = if_else(age == "80UP", "80+", age)) %>%
     mutate(age = paste(substr(age, 1, 2), "-", substr(age, 3, 4), sep = "")) %>%
     mutate(age = as.factor(age))
+
+
+# regions and countries info
 regions <- unique(df$region)
 countries <- df %>%
     select(region, country) %>%
@@ -61,6 +66,7 @@ countries <- countries %>%
     group_split(.keep = FALSE) %>%
     setNames((group_keys(countries))$region)
 
+# plot generator
 get_plot <- function(df, which_country = "Iran, Islamic Rep.", which_year = 2010) {
     total_population <- df %>%
         filter(country == which_country) %>%
@@ -115,16 +121,5 @@ get_plot <- function(df, which_country = "Iran, Islamic Rep.", which_year = 2010
                 color = "gray"
             )
         )
-    # g +
-    # transition_states(
-    # year,
-    # transition_length = 2,
-    # state_length = 1
-    # ) +
-    # ease_aes("sine-in-out")
-    # anim_save(paste("animations/", which_country, ".gif", sep = ""))
     g
 }
-# source("ui.R")
-# source("server.R")
-# shinyApp(ui, server)

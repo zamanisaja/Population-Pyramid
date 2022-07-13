@@ -4,7 +4,7 @@ library(shiny)
 ui <- fluidPage(
 
     # App title ----
-    titlePanel("Tabsets"),
+    titlePanel("Input"),
 
     # Sidebar layout with input and output definitions ----
     sidebarLayout(
