@@ -15,3 +15,5 @@ server <- function(input, output, session) {
         output$plot <- renderPlot(get_plot(df, input$country, input$year))
     })
 }
+
+return(server)
