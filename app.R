@@ -125,8 +125,6 @@ get_plot <- function(df, which_country = "Iran, Islamic Rep.", which_year = 2010
     # anim_save(paste("animations/", which_country, ".gif", sep = ""))
     g
 }
-
-
-source("ui.R")
-source("server.R")
-shinyApp(ui, server)
+# source("ui.R")
+# source("server.R")
+# shinyApp(ui, server)

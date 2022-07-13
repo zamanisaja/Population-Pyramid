@@ -1,4 +1,5 @@
 # Define UI for random distribution app ----
+source("app.R")
 ui <- fluidPage(
 
     # App title ----
