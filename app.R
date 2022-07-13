@@ -123,6 +123,3 @@ get_plot <- function(df, which_country = "Iran, Islamic Rep.", which_year = 2010
         )
     g
 }
-
-source("ui.R")
-source("server.R")

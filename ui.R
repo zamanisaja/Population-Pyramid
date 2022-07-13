@@ -1,6 +1,7 @@
 # Define UI for random distribution app ----
 library(shiny)
 
+source("app.R")
 ui <- fluidPage(
 
     # App title ----
