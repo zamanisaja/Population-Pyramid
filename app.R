@@ -1,36 +1,9 @@
----
-title: "Shiny Application"
-author: "Sadjad Zamani"
-always_allow_html: true
-output: 
-  html_document:
-    keep_md: true
----
-```{r include=FALSE}
-# some global options
-knitr::opts_chunk$set(warning = FALSE)
-knitr::opts_chunk$set(message = FALSE)
-knitr::opts_knit$set(cache = TRUE)
-knitr::opts_chunk$set(fig.path = "./figure/")
-knitr::opts_chunk$set(fig.align = "center")
-```
-
-
-## Introduction
-In this demo I want to plot the age demographics of different countries around the world.
-I'm getting the data from [The World Bank](https://www.worldbank.org/en/home) using this [api](https://github.com/gshs-ornl/wbstats)
-
-
-## Packages
-```{r packages}
 library(wbstats)
 library(tidyverse)
 library(ggplot2)
 library(gganimate)
 library(shiny)
-```
 
-```{r loadData}
 if (file.exists("data.csv")) {
     df <- read_csv2("data.csv", show_col_types = FALSE)
 } else {
@@ -60,9 +33,7 @@ df <- df %>%
     relocate(region, .after = "country") %>%
     select(-c("iso2c", "iso3c")) %>%
     rename(year = date)
-```
 
-```{r}
 df <- df %>%
     # look ath this example:
     # https://tidyr.tidyverse.org/reference/pivot_longer.html#ref-examples
@@ -80,8 +51,6 @@ df <- df %>%
     mutate(age = if_else(age == "80UP", "80+", age)) %>%
     mutate(age = paste(substr(age, 1, 2), "-", substr(age, 3, 4), sep = "")) %>%
     mutate(age = as.factor(age))
-```
-```{r}
 regions <- unique(df$region)
 countries <- df %>%
     select(region, country) %>%
@@ -91,9 +60,7 @@ countries <- df %>%
 countries <- countries %>%
     group_split(.keep = FALSE) %>%
     setNames((group_keys(countries))$region)
-```
 
-```{r}
 get_plot <- function(df, which_country = "Iran, Islamic Rep.", which_year = 2010) {
     total_population <- df %>%
         filter(country == which_country) %>%
@@ -158,11 +125,8 @@ get_plot <- function(df, which_country = "Iran, Islamic Rep.", which_year = 2010
     # anim_save(paste("animations/", which_country, ".gif", sep = ""))
     g
 }
-```
 
 
-```{r shinyApp}
 source("ui.R")
 source("server.R")
 shinyApp(ui, server)
-```
