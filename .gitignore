@@ -2,3 +2,6 @@ tmp
 report.md
 .Rproj.user
 shiny-demo.Rproj
+.Rhistory
+rsconnect/
+report.html
